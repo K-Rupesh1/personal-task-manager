@@ -1,69 +1,56 @@
-import os
-
-from dotenv import load_dotenv
 from fastapi import FastAPI
+import os
 import psycopg2
+from dotenv import load_dotenv
 
-from app import status
-
-from app.register import login5
 from app.register import login
 
 app = FastAPI(title="TaskFlow API")
 
-app.include_router(status.router)
-
-app.include_router(login.myRouter)
-
-app.include_router(login5.myRouter)
+# For loading the which is present in .env file
+load_dotenv()
 
 
 #postgres connection
 
+db_username=os.getenv("db_username")
+db_password=os.getenv("db_password")
+
+print(f"db_username : {db_username}")
+print(f"db_password : {db_password}")
+
+
 # taskflowDatabase = "{sqlServer}://{username}:{password}@{SQLserver}:{portNumber}/{DBName}"
+db_url=f"postgresql://{db_username}:{db_password}@localhost:5432/ptm_db"
 
-load_dotenv()
-
-DB_PW = os.getenv("DB_PASSWORD")
-
-DB_UN = os.getenv("DB_USERNAME")
-
-print("My pw is ", DB_PW)
-print("My username is ", DB_UN)
-
-taskflowDatabase = f"postgresql://{DB_UN}:{DB_PW}@localhost:5432/taskflow"
-
+#db connection
 try:
-    # psycopg2 natively accepts connection URIs
-    connection = psycopg2.connect(taskflowDatabase)
-    
+    connection = psycopg2.connect(db_url)
+
     cursor = connection.cursor()
-    cursor.execute("SELECT * from users")
-    db_version = cursor.fetchone()
-    print("Successfully connected to 'taskflow' database!")
-    print("PostgreSQL version:", db_version)
-    
-    # Close the connections
+
+    cursor.execute("SELECT * FROM users")
+
+    rows = cursor.fetchall()
+
+    print("Data in users table:")
+
+    for row in rows:
+        print(row)
+
     cursor.close()
     connection.close()
 
 except Exception as error:
     print("Error connecting to PostgreSQL:", error)
 
+
+# routing login.py file methods into main file
+app.include_router(login.router,
+                   prefix="/register",
+                   tags=["authentication"])
+
+
 @app.get("/health")
-def healthName():
-    return {"status": "Hello world!"}
-
-# @app.get("/isOk")
-# def healthName():
-#     return {"status": "I am very good from main.py"}
-
-#Cons
-# confusing
-# non readable
-# not maintainable
-# No separation
-
-#Better way of doing it
-
-#by separating
+def health():
+    return {"status": "ok"}
