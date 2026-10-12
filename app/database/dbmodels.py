@@ -1,13 +1,9 @@
+from datetime import date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column,String,Integer,Date
 from enum import Enum
 
-class TaskStatus(str,Enum):
-    ToDo="todo"
-    PENDING="Pending"
-    INPROGRESS="Inprogress"
-    DONE="Done"
-    CANCELLED="Cancelled"
+from app.schema import TaskStatus
 
 Base=declarative_base()
 class Create_Task(Base):
@@ -15,6 +11,6 @@ class Create_Task(Base):
     id=Column(Integer,primary_key=True)
     title=Column(String)
     description=Column(String)
-    created_date=Column(Date)
+    created_date=Column(Date, default=date.today)
     due_date=Column(Date)
-    status=TaskStatus
+    status=Column(String)
