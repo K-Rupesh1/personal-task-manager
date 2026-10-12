@@ -35,6 +35,32 @@ For the FastAPI application, use:
 uv run uvicorn app.main:app --reload
 ```
 
+## Database migrations (Alembic)
+
+Create a new migration from model changes:
+
+```sh
+uv run alembic revision --autogenerate -m "describe your change"
+```
+
+Apply migrations to the database:
+
+```sh
+uv run alembic upgrade head
+```
+
+Check the current migration state:
+
+```sh
+uv run alembic current
+```
+
+View migration history:
+
+```sh
+uv run alembic history
+```
+
 ## Dependency updates
 
 Add or update packages with uv:
