@@ -6,7 +6,19 @@ This project uses `uv` for dependency management and environment creation.
 
 ```sh
 uv sync
+```
+
+Activate the project environment in the shell you are using:
+
+```sh
+# macOS / Linux
 source .venv/bin/activate
+
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+
+# Windows cmd.exe
+.venv\Scripts\activate.bat
 ```
 
 `uv sync` reads dependencies from `pyproject.toml`, resolves them, and installs them with the lockfile in `uv.lock`.
