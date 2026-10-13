@@ -6,7 +6,9 @@ from enum import Enum
 from app.schema import TaskStatus
 
 Base=declarative_base()
-class Create_Task(Base):
+
+# Entity
+class Task(Base):
     __tablename__="tasks"
     id=Column(Integer,primary_key=True)
     title=Column(String)

@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from enum import Enum
+from datetime import datetime
 
 from app.schema import CreateTaskRequest, CreateTaskResponse, UpdateTaskRequest,UpdateTaskResponse
 
@@ -25,7 +26,7 @@ def get_db():
 @router.post("/addtask")
 def Add_Task(task:CreateTaskRequest,
     db:Session=Depends(get_db)):
-    new_task=dbmodels.Create_Task(
+    new_task=dbmodels.Task(
         title=task.title,
         description=task.description,
         due_date=task.due_date, 
@@ -48,34 +49,54 @@ def Add_Task(task:CreateTaskRequest,
         status=new_task.status)
     
 #endpoint for update task
-@router.put("/updatetask/{id}")
+@router.put("/updatetask")
 def UpdateTask(id:int,
                task:UpdateTaskRequest,
                db:Session=Depends(get_db)):
-    try :
-        if db.get(task):
-            task_update=UpdateTask(
-                id=task.id,
-                title=task.title,
-                description=task.description,
-                duedate=task.due_date,
-                status=task.status
-            )
+    try:
+        # task entity object created by using api user request
+        taskEntityObj=dbmodels.Task(
+                                    title=task.title,
+                                    description=task.description,
+                                    due_date=task.due_date,
+                                    status=task.status,
+                                    update_date=datetime.now()
+                                )
+        
+        # getting existing task fromt he db
+        # taskFromDB holds db data directly
+        taskFromDB = db.get(dbmodels.Task, id); #database row
+
+        # raise SQLAlchemyError("Simulated database failure")
+
+        if taskFromDB is not None:
             try:
-                db.add(task_update)
+                taskFromDB.title = taskEntityObj.title;
+                taskFromDB.status = taskFromDB.status;
+                taskFromDB.due_date = taskEntityObj.due_date;
+                taskFromDB.description = taskEntityObj.description;
+                taskFromDB.update_date = taskEntityObj.update_date;
+
                 db.commit()
-                db.refresh(task_update)
+                db.refresh(taskFromDB)
+
+                return UpdateTaskResponse(
+                            id = taskFromDB.id, 
+                            title = taskFromDB.title, 
+                            description = taskFromDB.description, 
+                            created_date=taskFromDB.created_date, 
+                            due_date=taskFromDB.due_date, 
+                            update_date=taskFromDB.update_date,
+                            status=taskFromDB.status)
+            
             except SQLAlchemyError as e :
-                db.rollback()
-                raise HTTPException(status_code=500,detail="Failed to update task")from e
-            return UpdateTaskResponse(
-                    id = task_update.id, 
-                    title = task_update.title, 
-                    description = task_update.description, 
-                    created_date=task_update.created_date, 
-                    due_date=task_update.due_date, 
-                    updated_date=task_update.updated_date,
-                    status=task_update.status)
+                    db.rollback()
+                    raise HTTPException(status_code=500,detail="Failed to update task")from e
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="Task id is not present"
+            )
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500,detail="Task id is not present")from e
+        raise HTTPException(status_code=500,detail="Something went wrong, Try again after some")
