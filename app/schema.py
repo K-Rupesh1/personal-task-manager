@@ -52,3 +52,14 @@ class UserResponse(BaseModel):
     email_id:str
     create_date:datetime
     update_date:datetime
+    
+class UpdateRequest(BaseModel):
+    username:str
+    email_id:str
+    password:str
+    
+class UpdateResponse(BaseModel):
+    id:int
+    username:str
+    email_id:str
+    update_time:datetime
