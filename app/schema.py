@@ -5,10 +5,10 @@ from pydantic import BaseModel,Field
 
 class TaskStatus(str,Enum):
     ToDo="todo"
-    PENDING="Pending"
-    INPROGRESS="Inprogress"
-    DONE="Done"
-    CANCELLED="Cancelled"  
+    PENDING="pending"
+    INPROGRESS="inprogress"
+    DONE="done"
+    CANCELLED="cancelled"  
 
 class CreateTaskRequest(BaseModel):
     title:str=Field(min_length=3)

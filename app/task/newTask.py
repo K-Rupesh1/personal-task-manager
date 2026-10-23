@@ -100,3 +100,25 @@ def UpdateTask(id:int,
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code=500,detail="Something went wrong, Try again after some")
+
+
+# GET TASKS
+@router.get("/gettasks")
+def gettasks(user_id:int=0,
+             db:Session=Depends(get_db),
+             ):
+    try:
+        if user_id ==0:
+            return db.query(dbmodels.Task).all()
+            
+        else:
+            get_task_from_db= db.query(dbmodels.Task).filter(dbmodels.Task.user_id==user_id).all()
+            #print(get_task_from_db)
+            if get_task_from_db: # if value is present in get_task_from_db it will return the value.
+                return get_task_from_db
+            else:
+                raise HTTPException(
+                    status_code=404,
+                    detail="No tasks found for this user")
+    except SQLAlchemyError as e: 
+        raise HTTPException(f"error{e}",status_code=500,detail="Error at data retrivel from db ,Please try again later") from e
