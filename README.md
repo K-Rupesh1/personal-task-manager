@@ -23,6 +23,14 @@ source .venv/bin/activate
 
 `uv sync` reads dependencies from `pyproject.toml`, resolves them, and installs them with the lockfile in `uv.lock`.
 
+Create a local `.env` file from `.env.example` and set your PostgreSQL credentials before starting the app or running migrations:
+
+```sh
+cp .env.example .env
+```
+
+Make sure PostgreSQL is running and the configured database exists. The `.env` file is ignored by Git.
+
 ## Run
 
 ```sh

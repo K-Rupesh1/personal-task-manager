@@ -33,18 +33,21 @@ def UserLoginRequest(login:UserRequest,
                 )
         print("1. User object created")
         db.add(userlogin)
-        print("there is a matching data in the database")
+        
         db.commit()
-        print("2. Data committed successfully")
+        
         db.refresh(userlogin)
         print("3. Data refreshed successfully")
+        print("there is a matching data in the database")
+        print("2. Data committed successfully")
+        # return userlogin;
         return UserResponse(
-            id=userlogin.id,
+            user_id=userlogin.user_id,
             username=userlogin.username,
             email_id=userlogin.email_id,
             create_date=userlogin.create_date,
             update_date=userlogin.update_date
-        ) 
+        )
         print("4. Response created successfully")       
     except SQLAlchemyError :
         db.rollback()

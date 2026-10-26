@@ -27,6 +27,7 @@ def get_db():
 def Add_Task(task:CreateTaskRequest,
     db:Session=Depends(get_db)):
     new_task=dbmodels.Task(
+        user_id=task.user_id,
         title=task.title,
         description=task.description,
         due_date=task.due_date, 

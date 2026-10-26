@@ -11,6 +11,7 @@ class TaskStatus(str,Enum):
     CANCELLED="cancelled"  
 
 class CreateTaskRequest(BaseModel):
+    user_id:str
     title:str=Field(min_length=3)
     description:str=Field(...,min_length=7,description="Description must have morethan 6 characters")
     due_date:datetime 
@@ -47,7 +48,7 @@ class UserRequest(BaseModel):
     password:str
     
 class UserResponse(BaseModel):
-    id:int
+    user_id:int
     username:str
     email_id:str
     create_date:datetime
