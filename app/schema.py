@@ -64,3 +64,13 @@ class UpdateResponse(BaseModel):
     username:str
     email_id:str
     update_time:datetime
+    
+class ReturnTask(BaseModel):
+    user_id:int=0
+    page_num:int=0
+    page_size:int=1
+    title:str
+    status:str
+# class FilterTask(BaseModel):
+#     title:str
+    
