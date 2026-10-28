@@ -65,12 +65,28 @@ class UpdateResponse(BaseModel):
     email_id:str
     update_time:datetime
     
+# class ReturnTask(BaseModel):
+#     user_id:int=0
+#     page_num:int=0
+#     page_size:int=1
+#     title:str
+#     status:str
+
+class TaskFilters(BaseModel):
+    user_id: int
+    title:str
+    due_date:datetime | None = None
+    status:str
+
 class ReturnTask(BaseModel):
-    user_id:int=0
     page_num:int=0
     page_size:int=1
-    title:str
-    status:str
+    filters:TaskFilters
+    column:str
+    order:str
+
+
+
 # class FilterTask(BaseModel):
 #     title:str
     

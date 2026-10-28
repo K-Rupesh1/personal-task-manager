@@ -1,6 +1,7 @@
 
 
 from fastapi import APIRouter
+from sqlalchemy import text
 from app.database import dbmodels
 from app.database.dbconnection import session_start
 from fastapi.params import Depends
@@ -134,11 +135,15 @@ def gettasks(
              task:ReturnTask,
              db:Session=Depends(get_db)
              ):
-    user_id=task.user_id
+    user_id=task.filters.user_id
     page_num=task.page_num
     page_size=task.page_size
-    title=task.title
-    status=task.status
+    title=task.filters.title
+    status=task.filters.status
+    due_date=task.filters.due_date
+    sorting_column=task.column
+    sorting_order=task.order
+
     response={
         "total_count":db.query(dbmodels.Task).count(),
         "data":[]
@@ -146,7 +151,45 @@ def gettasks(
     try:
         if user_id ==0:
             start=page_num*page_size
-            response["data"]=db.query(dbmodels.Task).filter(dbmodels.Task.title.ilike(f"%{title}%")).order_by(dbmodels.Task.status.like(f"{status}=asc")).offset(start).limit(page_size).all()
+
+            # sqlalchermy methods (ORM)
+
+            # response["data"]=(db.query(dbmodels.Task)
+            #     .filter(dbmodels.Task.title.ilike(f"%{title}%"))
+            #     .filter(dbmodels.Task.status.ilike(f"%{status}%"))
+            #     .filter(dbmodels.Task.due_date == due_date if due_date else True)
+            #     .order_by(
+            #         getattr(dbmodels.Task, sorting_column).desc()
+            #         if sorting_order.lower() == 'desc'
+            #         else getattr(dbmodels.Task, sorting_column).asc()
+            #         )
+            #     .offset(start)
+            #     .limit(page_size)
+            #     .all())
+
+
+            #sqlalechry custom queries
+            query = text("""
+                    SELECT *
+                    FROM public.tasks
+                    WHERE (:title IS NULL OR title ILIKE '%' || :title || '%')
+                    AND (:status IS NULL OR status = :status)
+                    AND (:due_date IS NULL OR due_date = :due_date)
+                    ORDER BY due_date
+                    OFFSET :start
+                    LIMIT :page_size
+                """)
+
+            result = db.execute(query, {
+                "title": title or None,
+                "status": status or None,
+                "due_date": due_date or None,
+                "start": start,
+                "page_size": page_size
+            })
+
+            response["data"] = result.mappings().all();
+
             return response
             
         else:
