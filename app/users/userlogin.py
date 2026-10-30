@@ -1,4 +1,4 @@
-from datetime import  datetime
+from datetime import  datetime,timezone,timedelta
 
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
@@ -6,14 +6,15 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from app.database import dbmodels
 from app.database.dbconnection import session_start
-
 from fastapi import APIRouter
-
 from app.database.dbmodels import User
 from app.schema import UpdateRequest, UserRequest, UserResponse
 
+import jwt
+from pwdlib import PasswordHash
 
 router = APIRouter()
+
 
 def get_db():
     db=session_start()
@@ -26,20 +27,35 @@ def UserLoginRequest(login:UserRequest,
                     db:Session=Depends(get_db)):
     
     try:
+        secret_key="my_secret_key"
+        payload={
+            "username":"login.username",
+            "email_id":"login.email_id",
+            "password":"login.password",
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=30)
+            }
+        token = jwt.encode(
+            payload,
+            secret_key,
+            algorithm="HS256"
+            )
+        print(token)
+        password_hash=PasswordHash.recommended()
+        hashed_Password=password_hash.hash(login.password)
+        print(hash)
         userlogin=User(
                 username=login.username,
                 email_id=login.email_id,
-                password=login.password
+                password=hashed_Password
                 )
         print("1. User object created")
         db.add(userlogin)
         
+    
         db.commit()
-        
+        print("2. Data Committed Successfully")
         db.refresh(userlogin)
         print("3. Data refreshed successfully")
-        print("there is a matching data in the database")
-        print("2. Data committed successfully")
         # return userlogin;
         return UserResponse(
             user_id=userlogin.user_id,
