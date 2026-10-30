@@ -1,19 +1,33 @@
-from datetime import  datetime
+from datetime import  datetime,timezone,timedelta
+import os
 
+from dotenv import load_dotenv
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from app.database import dbmodels
 from app.database.dbconnection import session_start
-
 from fastapi import APIRouter
-
 from app.database.dbmodels import User
-from app.schema import UpdateRequest, UserRequest, UserResponse
+from app.schema import LoginRequest, LoginResponse, UpdateRequest, UserRequest, UserResponse
 
+import jwt
+from pwdlib import PasswordHash
 
 router = APIRouter()
+
+load_dotenv()
+
+#1
+SECRET_KEY=os.getenv("SECRET_KEY")
+
+#2
+ALGORITHM = "HS256"
+
+#3
+EXPIRY = 30
+
 
 def get_db():
     db=session_start()
@@ -26,20 +40,23 @@ def UserLoginRequest(login:UserRequest,
                     db:Session=Depends(get_db)):
     
     try:
+        
+        password_hash=PasswordHash.recommended()
+        hashed_Password=password_hash.hash(login.password)
+        print(hash)
         userlogin=User(
                 username=login.username,
                 email_id=login.email_id,
-                password=login.password
+                password=hashed_Password
                 )
         print("1. User object created")
         db.add(userlogin)
         
+    
         db.commit()
-        
+        print("2. Data Committed Successfully")
         db.refresh(userlogin)
         print("3. Data refreshed successfully")
-        print("there is a matching data in the database")
-        print("2. Data committed successfully")
         # return userlogin;
         return UserResponse(
             user_id=userlogin.user_id,
@@ -96,7 +113,45 @@ def UpdateDetails(id:int,
         raise HTTPException(status_code=500,detail="Something went wrong, Try again after some")  
             
 
+@router.post("/login")
+def UserLoginRequest(loginRequest:LoginRequest,
+                    db:Session=Depends(get_db)):
+    
+    try:
+
+        #4
+        payload={
+                "sub":loginRequest.username,
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=EXPIRY)
+                }
+
+        dbUser = db.query(dbmodels.User).filter_by(username=loginRequest.username).first()
+
+        print(dbUser.password);
+
+        password_hash=PasswordHash.recommended()
+
+        isAuhorized= password_hash.verify(loginRequest.password, dbUser.password)
+
+        print(isAuhorized)
+
+        if isAuhorized:
+            
+            token = jwt.encode(
+                payload,
+                SECRET_KEY,
+                algorithm=ALGORITHM
+                )
+            return LoginResponse(
+                token = token,
+                type = "bearer"
+            )
+        else:
+            return "Username or Password is wrong!"
         
+    except SQLAlchemyError :
+        db.rollback()
+        raise HTTPException(status_code=500,detail="problem at database connection")
 
 
 
