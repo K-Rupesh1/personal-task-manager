@@ -1,5 +1,7 @@
 from datetime import  datetime,timezone,timedelta
+import os
 
+from dotenv import load_dotenv
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,12 +10,23 @@ from app.database import dbmodels
 from app.database.dbconnection import session_start
 from fastapi import APIRouter
 from app.database.dbmodels import User
-from app.schema import UpdateRequest, UserRequest, UserResponse
+from app.schema import LoginRequest, LoginResponse, UpdateRequest, UserRequest, UserResponse
 
 import jwt
 from pwdlib import PasswordHash
 
 router = APIRouter()
+
+load_dotenv()
+
+#1
+SECRET_KEY=os.getenv("SECRET_KEY")
+
+#2
+ALGORITHM = "HS256"
+
+#3
+EXPIRY = 30
 
 
 def get_db():
@@ -27,19 +40,7 @@ def UserLoginRequest(login:UserRequest,
                     db:Session=Depends(get_db)):
     
     try:
-        secret_key="my_secret_key"
-        payload={
-            "username":"login.username",
-            "email_id":"login.email_id",
-            "password":"login.password",
-            "exp": datetime.now(timezone.utc) + timedelta(minutes=30)
-            }
-        token = jwt.encode(
-            payload,
-            secret_key,
-            algorithm="HS256"
-            )
-        print(token)
+        
         password_hash=PasswordHash.recommended()
         hashed_Password=password_hash.hash(login.password)
         print(hash)
@@ -112,7 +113,45 @@ def UpdateDetails(id:int,
         raise HTTPException(status_code=500,detail="Something went wrong, Try again after some")  
             
 
+@router.post("/login")
+def UserLoginRequest(loginRequest:LoginRequest,
+                    db:Session=Depends(get_db)):
+    
+    try:
+
+        #4
+        payload={
+                "sub":loginRequest.username,
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=EXPIRY)
+                }
+
+        dbUser = db.query(dbmodels.User).filter_by(username=loginRequest.username).first()
+
+        print(dbUser.password);
+
+        password_hash=PasswordHash.recommended()
+
+        isAuhorized= password_hash.verify(loginRequest.password, dbUser.password)
+
+        print(isAuhorized)
+
+        if isAuhorized:
+            
+            token = jwt.encode(
+                payload,
+                SECRET_KEY,
+                algorithm=ALGORITHM
+                )
+            return LoginResponse(
+                token = token,
+                type = "bearer"
+            )
+        else:
+            return "Username or Password is wrong!"
         
+    except SQLAlchemyError :
+        db.rollback()
+        raise HTTPException(status_code=500,detail="problem at database connection")
 
 
 
