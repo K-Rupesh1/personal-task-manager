@@ -54,6 +54,16 @@ class UserResponse(BaseModel):
     create_date:datetime
     update_date:datetime
     
+
+class UserLogin(BaseModel):
+    email:str
+    password:str
+    
+class PasswordReset(BaseModel):
+    email_id:str
+    new_password:str
+    confirm_password:str
+    
 class UpdateRequest(BaseModel):
     username:str
     email_id:str
@@ -84,6 +94,7 @@ class ReturnTask(BaseModel):
     filters:TaskFilters
     column:str
     order:str
+
 
 
 
