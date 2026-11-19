@@ -74,11 +74,11 @@ def UpdateTask(id:int,
 
         if taskFromDB is not None:
             try:
-                taskFromDB.title = taskEntityObj.title;
-                taskFromDB.status = taskFromDB.status;
-                taskFromDB.due_date = taskEntityObj.due_date;
-                taskFromDB.description = taskEntityObj.description;
-                taskFromDB.update_date = taskEntityObj.update_date;
+                taskFromDB.title = taskEntityObj.title,
+                taskFromDB.status = taskFromDB.status,
+                taskFromDB.due_date = taskEntityObj.due_date,
+                taskFromDB.description = taskEntityObj.description,
+                taskFromDB.update_date = taskEntityObj.update_date
 
                 db.commit()
                 db.refresh(taskFromDB)
