@@ -46,6 +46,15 @@ class UserRequest(BaseModel):
     username:str
     email_id:str
     password:str
+
+class LoginRequest(BaseModel):
+    username:str
+    password:str 
+
+
+class LoginResponse(BaseModel):
+    token:str
+    type:str    
     
 class UserResponse(BaseModel):
     user_id:int
